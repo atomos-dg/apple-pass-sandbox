@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "name": "apple-pass-sandbox",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
+    "APPLE_PASS_TYPE_IDENTIFIER": "@apple_pass_type_identifier",
+    "APPLE_TEAM_IDENTIFIER": "@apple_team_identifier",
+    "APPLE_CERTIFICATE_PATH": "@apple_certificate_path",
+    "APPLE_CERTIFICATE_PASSWORD": "@apple_certificate_password",
+    "APPLE_PUSH_CERT_PATH": "@apple_push_cert_path",
+    "APPLE_PUSH_KEY_PATH": "@apple_push_key_path",
+    "APPLE_PUSH_KEY_ID": "@apple_push_key_id"
+  },
+  "headers": [
+    {
+      "source": "/api/v1/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ]
+}
