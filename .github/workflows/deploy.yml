@@ -1,4 +1,4 @@
-name: Deploy to Vercel
+name: CI/CD Pipeline
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Test and Lint
+    name: Test and Build
 
     steps:
     - name: Checkout
@@ -28,90 +28,28 @@ jobs:
       run: yarn lint
 
     - name: Type check
-      run: yarn type-check || echo "Type checking step - will implement when scripts are added"
+      run: yarn type-check
 
     - name: Build project
       run: yarn build
 
-  deploy-preview:
-    runs-on: ubuntu-latest
-    name: Deploy Preview
-    needs: test
-    if: github.event_name == 'pull_request'
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
       with:
-        node-version: '18'
-        cache: 'yarn'
+        name: build-files
+        path: .next/
 
-    - name: Install Vercel CLI
-      run: npm install -g vercel@latest
-
-    - name: Pull Vercel Environment Information
-      run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-    - name: Build Project Artifacts
-      run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
-    - name: Deploy Project Artifacts to Vercel
-      id: deploy
-      run: |
-        DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-        echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-
-    - name: Comment PR
-      uses: actions/github-script@v7
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: `🚀 Preview deployment ready at: ${{ steps.deploy.outputs.deployment_url }}`
-          })
-
-  deploy-production:
+  # Note: Vercel will handle deployments automatically via Git integration
+  # This workflow ensures code quality before deployment
+  deploy-status:
     runs-on: ubuntu-latest
-    name: Deploy Production
+    name: Deployment Status
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'yarn'
-
-    - name: Install Vercel CLI
-      run: npm install -g vercel@latest
-
-    - name: Pull Vercel Environment Information
-      run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-    - name: Build Project Artifacts
-      run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-    - name: Deploy Project Artifacts to Vercel
-      run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-    - name: Create deployment status
-      uses: actions/github-script@v7
-      with:
-        script: |
-          github.rest.repos.createDeploymentStatus({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            deployment_id: context.payload.deployment?.id || 'unknown',
-            state: 'success',
-            environment_url: 'https://apple-pass-sandbox-liubfjuw1.vercel.app',
-            description: 'Deployment succeeded'
-          })
+    - name: Deployment Success
+      run: |
+        echo "✅ Build completed successfully"
+        echo "🚀 Vercel will automatically deploy this commit"
+        echo "📱 Production URL: https://apple-pass-sandbox-liubfjuw1.vercel.app"
